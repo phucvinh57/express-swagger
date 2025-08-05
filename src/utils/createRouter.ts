@@ -1,7 +1,7 @@
-import { Handler } from '@/interfaces/handler';
 import { TSchema } from '@sinclair/typebox';
 import { AssertError, Value } from '@sinclair/typebox/value';
-import { Router, RouterOptions, Request, Response } from 'express';
+import { Router, RouterOptions, Request, Response, Handler as Middleware } from 'express';
+import { OpenAPIV3_1 } from 'openapi-types';
 
 type HttpMethod = 'get' | 'post' | 'put' | 'delete' | 'patch' | 'options' | 'head';
 type EndpointDefinition = {
@@ -11,13 +11,25 @@ type EndpointDefinition = {
   params?: TSchema;
   body?: TSchema;
   response?: Record<number, TSchema>;
-  handler: Handler;
+  middlewares?: Middleware[];
+  handler: (req: Request<any>, res: Response) => void | Promise<void>;
 }
 
-export function createRouter(endpoints: EndpointDefinition[], options?: RouterOptions): Router {
-  const router = Router(options);
+const openApiSpec: OpenAPIV3_1.Document = {
+  openapi: '3.1.0',
+  info: {
+    title: 'API Documentation',
+    version: '1.0.0',
+  },
+  paths: {},
+};
 
-  for (const { path, method, query, params, body, response, handler } of endpoints) {
+export function createRouter(endpoints: EndpointDefinition[], options?: RouterOptions & { middlewares?: Middleware[]}): Router {
+  const { middlewares: rootMiddlewares, ...routerOptions } = options || {};
+  const router = Router(routerOptions);
+  if(rootMiddlewares) router.use(...rootMiddlewares);
+
+  for (const { path, method, query, params, body, handler, response, middlewares = [] } of endpoints) {
     const wrapHandler = (req: Request, res: Response) => {
       try {
         if (query) req.query = Value.Parse(query, req.query);
@@ -34,21 +46,31 @@ export function createRouter(endpoints: EndpointDefinition[], options?: RouterOp
       return handler(req, res);
     };
 
-    if (method === 'get') {
-      router.get(path, wrapHandler);
-    } else if (method === 'post') {
-      router.post(path, wrapHandler);
-    } else if (method === 'put') {
-      router.put(path, wrapHandler);
-    } else if (method === 'delete') {
-      router.delete(path, wrapHandler);
-    } else if (method === 'patch') {
-      router.patch(path, wrapHandler);
-    } else if (method === 'options') {
-      router.options(path, wrapHandler);
-    } else if (method === 'head') {
-      router.head(path, wrapHandler);
+    // Update OpenAPI spec
+    if (!openApiSpec.paths?.[path]) {
+      openApiSpec.paths![path] = {
+        ['get']: {
+          
+          responses: {},
+        },
+      };
     }
+
+    if (method === 'get') {
+      router.get(path, ...middlewares, wrapHandler);
+    } else if (method === 'post') {
+      router.post(path, ...middlewares, wrapHandler);
+    } else if (method === 'put') {
+      router.put(path, ...middlewares, wrapHandler);
+    } else if (method === 'delete') {
+      router.delete(path, ...middlewares, wrapHandler);
+    } else if (method === 'patch') {
+      router.patch(path, ...middlewares, wrapHandler);
+    } else if (method === 'options') {
+      router.options(path, ...middlewares, wrapHandler);
+    } else if (method === 'head') {
+      router.head(path, ...middlewares, wrapHandler);
+    } else throw new Error(`Unsupported HTTP method: ${method}`);
   }
 
   return router;

@@ -10,7 +10,7 @@ export const userRouter = createRouter([
     response: {
       200: Type.Array(User),
     },
-    handler: userController.getAllUsers,
+    handler: userController.getList,
   },
   {
     path: '/:id',
@@ -21,7 +21,7 @@ export const userRouter = createRouter([
     response: {
       200: User,
     },
-    handler: userController.getUserById,
+    handler: userController.getById,
   },
   {
     path: '/',
@@ -30,7 +30,7 @@ export const userRouter = createRouter([
     response: {
       201: User,
     },
-    handler: userController.createUser,
+    handler: userController.create,
   },
   {
     path: '/:id',
@@ -42,7 +42,7 @@ export const userRouter = createRouter([
     response: {
       200: User,
     },
-    handler: userController.updateUser,
+    handler: userController.update,
   },
   {
     path: '/:id',
@@ -53,6 +53,6 @@ export const userRouter = createRouter([
     response: {
       204: Type.Undefined(),
     },
-    handler: userController.deleteUser,
+    handler: userController.delete,
   },
 ]);

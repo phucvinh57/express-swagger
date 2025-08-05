@@ -1,94 +1,49 @@
 import { Request, Response } from 'express';
 import { userModel } from '@/models/UserModel';
-import { CreateUserDto, UpdateUserDto } from '@/dtos/User';
+import { CreateUserDto, UpdateUserDto, User } from '@/dtos/User';
+import { Handler } from '@/interfaces/handler';
 
-function getList(req: Request, res: Response): void {
+const getList: Handler<{ Resp: User[] }> = (req, res) => {
   const users = userModel.getAllUsers();
   res.json(users);
 }
 
-export class UserController {
-  // GET /users - Get all users
-  getAllUsers = (req: Request, res: Response): void => {
-    const users = userModel.getAllUsers();
-    res.json(users);
-  };
-
-  // GET /users/:id - Get user by ID
-  getUserById = (req: Request, res: Response): void => {
-    const id = parseInt(req.params.id);
-    
-    if (isNaN(id)) {
-      res.status(400).json({ error: 'Invalid user ID' });
-      return;
-    }
-    
-    const user = userModel.getUserById(id);
-    
-    if (!user) {
-      res.status(404).json({ error: 'User not found' });
-      return;
-    }
-    
-    res.json(user);
-  };
-
-  // POST /users - Create new user
-  createUser = (req: Request<{}, {}, CreateUserDto>, res: Response): void => {
-    const { name, email } = req.body;
-    
-    if (!name || !email) {
-      res.status(400).json({ error: 'Name and email are required' });
-      return;
-    }
-    
-    const newUser = userModel.createUser(name, email);
-    res.status(201).json(newUser);
-  };
-
-  // PUT /users/:id - Update user
-  updateUser = (req: Request<{ id: string }, {}, UpdateUserDto>, res: Response): void => {
-    const id = parseInt(req.params.id);
-    const { name, email } = req.body;
-    
-    if (isNaN(id)) {
-      res.status(400).json({ error: 'Invalid user ID' });
-      return;
-    }
-    
-    if (!name || !email) {
-      res.status(400).json({ error: 'Name and email are required' });
-      return;
-    }
-    
-    const updatedUser = userModel.updateUser(id, name, email);
-    
-    if (!updatedUser) {
-      res.status(404).json({ error: 'User not found' });
-      return;
-    }
-    
-    res.json(updatedUser);
-  };
-
-  // DELETE /users/:id - Delete user
-  deleteUser = (req: Request, res: Response): void => {
-    const id = parseInt(req.params.id);
-    
-    if (isNaN(id)) {
-      res.status(400).json({ error: 'Invalid user ID' });
-      return;
-    }
-    
-    const deleted = userModel.deleteUser(id);
-    
-    if (!deleted) {
-      res.status(404).json({ error: 'User not found' });
-      return;
-    }
-    
-    res.status(204).send();
-  };
+const getById: Handler<{ Params: { id: number }, Resp: User }> = (req, res) => {
+  const user = userModel.getUserById(req.params.id);
+  if (!user) {
+    res.status(404).json({ message: 'User not found' });
+    return;
+  }
+  res.json(user);
 }
 
-export const userController = new UserController();
+const create: Handler<{ Body: CreateUserDto, Resp: User }> = (req, res) => {
+  const newUser = userModel.createUser(req.body.name, req.body.email);
+  res.status(201).json(newUser);
+}
+
+const update: Handler<{ Params: { id: number }, Body: UpdateUserDto, Resp: User }> = (req, res) => {
+  const updatedUser = userModel.updateUser(req.params.id, req.body.name, req.body.email);
+  if (!updatedUser) {
+    res.status(404).json({ message: 'User not found' });
+    return;
+  }
+  res.json(updatedUser);
+}
+
+const deleteUser: Handler<{ Params: { id: number } }> = (req, res) => {
+  const deleted = userModel.deleteUser(req.params.id);
+  if (!deleted) {
+    res.status(404).json({ message: 'User not found' });
+    return;
+  }
+  res.status(204).send();
+}
+
+export const userController = {
+  getList,
+  getById,
+  create,
+  update,
+  delete: deleteUser
+}

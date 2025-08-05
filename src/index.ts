@@ -1,5 +1,6 @@
 import express, { Application } from 'express';
 import routes from './routes';
+import swaggerUi from 'swagger-ui-express';
 
 const app: Application = express();
 const port = process.env.PORT || 3000;
@@ -14,6 +15,8 @@ app.use('/api', routes);
 app.get('/health', (req, res) => {
   res.json({ status: 'OK', timestamp: new Date().toISOString() });
 });
+
+app.use('docs', swaggerUi.serve, swaggerUi.setup({}))
 
 app.listen(port, () => {
   console.log(`Server running at http://localhost:${port}`);
