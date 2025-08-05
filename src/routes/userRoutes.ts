@@ -1,21 +1,58 @@
-import { Router } from 'express';
-import { userController } from '../controllers/UserController';
+import { userController } from '@/controllers/user.controller';
+import { CreateUserDto, UpdateUserDto, User } from '@/dtos/User';
+import { createRouter } from '@/utils/createRouter';
+import { Type } from '@sinclair/typebox';
 
-const router: Router = Router();
-
-// GET /users - Get all users
-router.get('/', userController.getAllUsers);
-
-// GET /users/:id - Get user by ID
-router.get('/:id', userController.getUserById);
-
-// POST /users - Create new user
-router.post('/', userController.createUser);
-
-// PUT /users/:id - Update user
-router.put('/:id', userController.updateUser);
-
-// DELETE /users/:id - Delete user
-router.delete('/:id', userController.deleteUser);
-
-export default router;
+export const userRouter = createRouter([
+  {
+    path: '/',
+    method: 'get',
+    response: {
+      200: Type.Array(User),
+    },
+    handler: userController.getAllUsers,
+  },
+  {
+    path: '/:id',
+    method: 'get',
+    params: Type.Object({
+      id: Type.String(),
+    }),
+    response: {
+      200: User,
+    },
+    handler: userController.getUserById,
+  },
+  {
+    path: '/',
+    method: 'post',
+    body: CreateUserDto,
+    response: {
+      201: User,
+    },
+    handler: userController.createUser,
+  },
+  {
+    path: '/:id',
+    method: 'put',
+    params: Type.Object({
+      id: Type.String(),
+    }),
+    body: UpdateUserDto,
+    response: {
+      200: User,
+    },
+    handler: userController.updateUser,
+  },
+  {
+    path: '/:id',
+    method: 'delete',
+    params: Type.Object({
+      id: Type.String(),
+    }),
+    response: {
+      204: Type.Undefined(),
+    },
+    handler: userController.deleteUser,
+  },
+]);

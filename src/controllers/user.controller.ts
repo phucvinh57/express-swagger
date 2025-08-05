@@ -1,6 +1,11 @@
 import { Request, Response } from 'express';
-import { userModel } from '../models/UserModel';
-import { CreateUserRequest, UpdateUserRequest } from '../types/User';
+import { userModel } from '@/models/UserModel';
+import { CreateUserDto, UpdateUserDto } from '@/dtos/User';
+
+function getList(req: Request, res: Response): void {
+  const users = userModel.getAllUsers();
+  res.json(users);
+}
 
 export class UserController {
   // GET /users - Get all users
@@ -29,7 +34,7 @@ export class UserController {
   };
 
   // POST /users - Create new user
-  createUser = (req: Request<{}, {}, CreateUserRequest>, res: Response): void => {
+  createUser = (req: Request<{}, {}, CreateUserDto>, res: Response): void => {
     const { name, email } = req.body;
     
     if (!name || !email) {
@@ -42,7 +47,7 @@ export class UserController {
   };
 
   // PUT /users/:id - Update user
-  updateUser = (req: Request<{ id: string }, {}, UpdateUserRequest>, res: Response): void => {
+  updateUser = (req: Request<{ id: string }, {}, UpdateUserDto>, res: Response): void => {
     const id = parseInt(req.params.id);
     const { name, email } = req.body;
     

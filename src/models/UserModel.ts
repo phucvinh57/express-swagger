@@ -1,4 +1,4 @@
-import { User } from '../types/User';
+import { User } from '@/dtos/User';
 
 class UserModel {
   private users: User[] = [

@@ -1,0 +1,2 @@
+import { Request, Response } from 'express';
+export type Handler<Query = any, Params = any, Body = any, Resp = any> = (req: Request<Params, Resp, Body, Query>, res: Response<Resp>) => void | Promise<void>;
