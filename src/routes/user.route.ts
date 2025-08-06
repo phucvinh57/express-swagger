@@ -1,33 +1,58 @@
-import { Router } from 'express';
-import { userController } from '@/controllers/user.controller';
-import { CreateUserDto, UpdateUserDto, User } from '@/dtos/User';
-import { createValidationMiddleware } from '@/utils/express-swagger';
-import { Type } from '@sinclair/typebox';
+import { type Static, Type } from "@sinclair/typebox";
+import { Router } from "express";
+import { userController } from "@/controllers/user.controller";
+import { CreateUserDto, UpdateUserDto, User } from "@/dtos/User";
+import { createValidationMiddleware } from "@/utils/express-swagger";
 
 const userRoutes: Router = Router();
-userRoutes.get('/', createValidationMiddleware({
-  response: { 200: Type.Array(User) },
-}), userController.getList);
+const IdParam = Type.Object({
+	id: Type.Number(),
+});
+type IdParam = Static<typeof IdParam>;
 
-userRoutes.post('/', createValidationMiddleware({
-  body: CreateUserDto,
-  response: { 201: User },
-}), userController.create);
+userRoutes.get(
+	"/",
+	createValidationMiddleware({
+		response: { 200: Type.Array(User) },
+	}),
+	userController.getList,
+);
 
-userRoutes.get<string, any>('/:id', createValidationMiddleware({
-  params: Type.Object({ id: Type.Number() }),
-  response: { 200: User },
-}), userController.getById);
+userRoutes.post(
+	"/",
+	createValidationMiddleware({
+		body: CreateUserDto,
+		response: { 201: User },
+	}),
+	userController.create,
+);
 
-userRoutes.put<string, any>('/:id', createValidationMiddleware({
-  params: Type.Object({ id: Type.Number() }),
-  body: UpdateUserDto,
-  response: { 200: User },
-}), userController.update);
+userRoutes.get<string, IdParam>(
+	"/:id",
+	createValidationMiddleware({
+		params: IdParam,
+		response: { 200: User },
+	}),
+	userController.getById,
+);
 
-userRoutes.delete<string, any>('/:id', createValidationMiddleware({
-  params: Type.Object({ id: Type.Number() }),
-  response: { 204: Type.Undefined() },
-}), userController.delete);
+userRoutes.put<string, IdParam>(
+	"/:id",
+	createValidationMiddleware({
+		params: IdParam,
+		body: UpdateUserDto,
+		response: { 200: User },
+	}),
+	userController.update,
+);
+
+userRoutes.delete<string, IdParam>(
+	"/:id",
+	createValidationMiddleware({
+		params: IdParam,
+		response: { 204: Type.Undefined() },
+	}),
+	userController.delete,
+);
 
 export { userRoutes };
