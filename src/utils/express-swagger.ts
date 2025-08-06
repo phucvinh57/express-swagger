@@ -1,17 +1,17 @@
 import type { TSchema } from "@sinclair/typebox";
 import { AssertError, Value } from "@sinclair/typebox/value";
-import type { RequestHandler } from "express";
+import type { Application, IRouter, Handler as Middleware } from "express";
+import type { OpenAPIV3_1 } from "openapi-types";
+import swaggerUi from "swagger-ui-express";
 
-// import type { OpenAPIV3_1 } from "openapi-types";
-
-// const openApiSpec: OpenAPIV3_1.Document = {
-// 	openapi: "3.1.0",
-// 	info: {
-// 		title: "API Documentation",
-// 		version: "1.0.0",
-// 	},
-// 	paths: {},
-// };
+const openApiSpec: OpenAPIV3_1.Document = {
+	openapi: "3.1.0",
+	info: {
+		title: "API Documentation",
+		version: "1.0.0",
+	},
+	paths: {},
+};
 
 type ValidationOptions = {
 	query?: TSchema;
@@ -21,8 +21,8 @@ type ValidationOptions = {
 };
 export function createValidationMiddleware(
 	options: ValidationOptions,
-): RequestHandler<unknown> {
-	const middleware: RequestHandler<unknown> = (req, res, next) => {
+): Middleware {
+	const __expressSwagger: Middleware = (req, res, next) => {
 		try {
 			if (options.query) req.query = Value.Parse(options.query, req.query);
 			if (options.params) req.params = Value.Parse(options.params, req.params);
@@ -37,6 +37,35 @@ export function createValidationMiddleware(
 			}
 		}
 	};
-	middleware.prototype = { openapi: options };
-	return middleware;
+	__expressSwagger.prototype = { openapi: options };
+	return __expressSwagger;
+}
+
+type ILayer = IRouter["stack"][number];
+function printRouteStack(stack: ILayer) {
+	if (!stack.route) {
+		if (stack.name === "router") {
+			const router = stack.handle as IRouter;
+			console.log("=== Router");
+			console.log(stack);
+			for (const subLayer of router.stack) {
+				printRouteStack(subLayer);
+			}
+			console.log("=== End Router");
+		} else {
+			console.log(`Middleware: ${stack.name}`);
+		}
+	} else {
+		// @ts-ignore
+		console.log("Handler:", stack.route, stack.matchers[0].prototype);
+	}
+}
+
+export function setupSwagger(app: Application) {
+	const layers = app.router.stack;
+	for (const layer of layers) {
+		printRouteStack(layer);
+	}
+
+	app.use("/docs", swaggerUi.serve, swaggerUi.setup(openApiSpec));
 }

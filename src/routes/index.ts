@@ -1,9 +1,9 @@
 import { Router } from "express";
 import { userRoutes } from "./user.route";
 
-const router: Router = Router();
+const rootRouter: Router = Router();
 
 // Mount user routes
-router.use("/users", userRoutes);
+rootRouter.use("/users", userRoutes);
 
-export default router;
+export default rootRouter;
