@@ -1,6 +1,7 @@
 import express, { Application } from 'express';
 import routes from './routes';
 import swaggerUi from 'swagger-ui-express';
+import { logger } from '@/utils/logger';
 
 const app: Application = express();
 const port = process.env.PORT || 3000;
@@ -19,9 +20,9 @@ app.get('/health', (req, res) => {
 app.use('docs', swaggerUi.serve, swaggerUi.setup({}))
 
 app.listen(port, () => {
-  console.log(`Server running at http://localhost:${port}`);
-  console.log(`Health check: http://localhost:${port}/health`);
-  console.log(`Users API: http://localhost:${port}/api/users`);
+  logger.info(`Server running at http://localhost:${port}`);
+  logger.info(`Health check: http://localhost:${port}/health`);
+  logger.info(`Users API: http://localhost:${port}/api/users`);
 });
 
 export default app;

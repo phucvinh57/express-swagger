@@ -16,5 +16,3 @@ export const UpdateUserDto = Type.Object({
   email: Type.String(),
 });
 export type UpdateUserDto = Static<typeof UpdateUserDto>;
-
-console.log(User, CreateUserDto, UpdateUserDto);
